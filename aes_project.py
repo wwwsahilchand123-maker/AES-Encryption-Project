@@ -77,26 +77,47 @@ class FileEncryption:
         try:
             if not os.path.exists(encrypted_file):
                 return None, "File not found"
-            
+
             output_file = encrypted_file.replace('.encrypted', '_decrypted')
             file_size = os.path.getsize(encrypted_file)
-            
+            if file_size <= 16:
+                return None, "Invalid encrypted file"
+
             with open(encrypted_file, 'rb') as f_in:
                 iv = f_in.read(16)
                 cipher = AES.new(self.key, AES.MODE_CBC, iv)
-                
+                bytes_remaining = file_size - 16
                 bytes_done = 0
+                pending = b''
+
                 with open(output_file, 'wb') as f_out:
-                    while True:
-                        chunk = f_in.read(self.CHUNK_SIZE)
-                        if not chunk:
-                            break
+                    while bytes_remaining:
+                        chunk = f_in.read(min(self.CHUNK_SIZE, bytes_remaining))
+                        if not chunk or len(chunk) % AES.block_size:
+                            return None, "Invalid encrypted data"
+                        bytes_remaining -= len(chunk)
                         decrypted = cipher.decrypt(chunk)
-                        f_out.write(decrypted)
                         bytes_done += len(chunk)
+                        pending += decrypted
+
+                        # Keep the final block until EOF so PKCS#7 padding
+                        # can be removed exactly once.
+                        if bytes_remaining:
+                            flush_len = len(pending) - AES.block_size
+                            if flush_len:
+                                f_out.write(pending[:flush_len])
+                                pending = pending[flush_len:]
+
                         if callback:
                             callback(min((bytes_done / (file_size - 16)) * 100, 100))
-            
+
+                    if not pending:
+                        return None, "Invalid encrypted data"
+                    try:
+                        f_out.write(unpad(pending, AES.block_size))
+                    except ValueError:
+                        return None, "Invalid padding or wrong password"
+
             return output_file, "Success"
         except Exception as e:
             return None, str(e)
