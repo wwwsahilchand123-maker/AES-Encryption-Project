@@ -53,6 +53,8 @@ flowchart LR
 ```text
 AES-Encryption-Project/
 ├── aes_project.py
+├── tests/
+│   └── test_aes_project.py
 ├── .gitignore
 ├── assets/
 │   └── README-banner.svg
@@ -76,6 +78,17 @@ python aes_project.py
 - [ ] Define a versioned encrypted-file format
 - [ ] Add automated round-trip and wrong-password tests
 - [ ] Add large-file and failure-recovery tests
+
+## 🧪 Automated Tests
+
+Run the round-trip tests with:
+
+```bash
+pip install pytest
+python -m pytest -q
+```
+
+The suite verifies text encryption/decryption and multi-block file encryption/decryption. Keep these tests passing when changing the file format or padding behavior.
 
 ## 🧪 Test Principle
 
