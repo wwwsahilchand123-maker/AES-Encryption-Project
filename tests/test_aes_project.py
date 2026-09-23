@@ -25,6 +25,16 @@ def test_text_tampering_fails_closed():
     assert TextEncryption("test-password").decrypt(tampered) is None
 
 
+def test_text_encryption_uses_a_fresh_iv_for_each_operation():
+    encryptor = TextEncryption("test-password")
+    first = encryptor.encrypt("same plaintext")
+    second = encryptor.encrypt("same plaintext")
+    assert first and second
+    assert first != second
+    assert encryptor.decrypt(first) == "same plaintext"
+    assert encryptor.decrypt(second) == "same plaintext"
+
+
 def test_file_round_trip():
     with tempfile.TemporaryDirectory() as tmp:
         source = Path(tmp) / "sample.bin"
