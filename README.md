@@ -115,3 +115,25 @@ Do not use this project to protect high-value real-world secrets until its crypt
 **Built by Sahil Chand**
 
 </div>
+
+---
+
+## 🔐 Security Design
+
+The project is designed as a cryptography learning application rather than production-grade key management software.
+
+- Passwords are used for key derivation and are not stored as encryption keys.
+- Encryption operations use fresh random values rather than a fixed IV.
+- Binary file data is handled without treating ciphertext as text.
+- Decryption failures are surfaced instead of silently accepting corrupted data.
+- Plaintext passwords and secrets must never be committed or logged.
+
+### Documentation
+- [Product Requirements](docs/PRD.md)
+- [Cryptography & Testing Notes](docs/CRYPTOGRAPHY_NOTES.md)
+
+Run the regression suite after cryptography or file-format changes:
+
+```bash
+python -m pytest -q
+```
